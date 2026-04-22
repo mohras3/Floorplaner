@@ -1,23 +1,23 @@
-import { useState, useRef, useEffect, useCallback, useReducer } from “react”;
+import { useState, useRef, useEffect, useCallback, useReducer } from "react";
 
 const GRID = 20;
 const snap = (v) => Math.round(v / GRID) * GRID;
 
-const ROOM_COLORS = [”#e8d5b7”,”#b7d5e8”,”#b7e8c8”,”#e8b7b7”,”#e8e8b7”,”#d5b7e8”,”#b7e8e8”,”#f0cba8”];
-const ROOM_NAMES  = [“Vardagsrum”,“Kök”,“Sovrum”,“Badrum”,“Hall”,“Kontor”,“Förråd”,“Matsal”];
-const WALL_SIZES  = [{ label:“Tunn (5cm)”, v:3 },{ label:“Normal (10cm)”, v:6 },{ label:“Tjock (20cm)”, v:12 },{ label:“Bärande (30cm)”, v:18 }];
+const ROOM_COLORS = ["#e8d5b7","#b7d5e8","#b7e8c8","#e8b7b7","#e8e8b7","#d5b7e8","#b7e8e8","#f0cba8"];
+const ROOM_NAMES  = ["Vardagsrum","Kök","Sovrum","Badrum","Hall","Kontor","Förråd","Matsal"];
+const WALL_SIZES  = [{ label:"Tunn (5cm)", v:3 },{ label:"Normal (10cm)", v:6 },{ label:"Tjock (20cm)", v:12 },{ label:"Bärande (30cm)", v:18 }];
 const TEXT_SIZES  = [8,10,12,14,16,20,24,32];
 
 const TOOLS = [
-{ id:“wall”,   label:“Vägg”,    icon:“▬” },
-{ id:“room”,   label:“Rum”,     icon:“⬛” },
-{ id:“door”,   label:“Dörr”,    icon:“⌒” },
-{ id:“window”, label:“Fönster”, icon:“▭” },
-{ id:“stair”,  label:“Trappa”,  icon:“≡” },
-{ id:“vent”,   label:“Ventil”,  icon:“⊕” },
-{ id:“text”,   label:“Text”,    icon:“T” },
-{ id:“select”, label:“Välj”,    icon:“↖” },
-{ id:“erase”,  label:“Radera”,  icon:“✕” },
+{ id:"wall",   label:"Vägg",    icon:"▬" },
+{ id:"room",   label:"Rum",     icon:"⬛" },
+{ id:"door",   label:"Dörr",    icon:"⌒" },
+{ id:"window", label:"Fönster", icon:"▭" },
+{ id:"stair",  label:"Trappa",  icon:"≡" },
+{ id:"vent",   label:"Ventil",  icon:"⊕" },
+{ id:"text",   label:"Text",    icon:"T" },
+{ id:"select", label:"Välj",    icon:"↖" },
+{ id:"erase",  label:"Radera",  icon:"✕" },
 ];
 
 const STAIR_STEPS = [4, 6, 8, 10, 12, 14, 16];
@@ -28,20 +28,20 @@ const newId = () => _id++;
 // ── History reducer ──────────────────────────────────────────────────────────
 function historyReducer(state, action) {
 switch (action.type) {
-case “SET”: {
-const past = […state.past, state.present].slice(-80);
+case "SET": {
+const past = [...state.past, state.present].slice(-80);
 return { past, present: action.elements, future: [] };
 }
-case “UNDO”: {
+case "UNDO": {
 if (!state.past.length) return state;
-const past = […state.past];
+const past = [...state.past];
 const present = past.pop();
-return { past, present, future: [state.present, …state.future] };
+return { past, present, future: [state.present, ...state.future] };
 }
-case “REDO”: {
+case "REDO": {
 if (!state.future.length) return state;
-const [present, …future] = state.future;
-return { past: […state.past, state.present], present, future };
+const [present, ...future] = state.future;
+return { past: [...state.past, state.present], present, future };
 }
 default: return state;
 }
@@ -59,11 +59,11 @@ const px = -uy, py = ux;
 const r = len;
 // Arc endpoint: swing quarter circle from x1→x2 direction, rotated 90°
 const ax = el.x1 + px * r, ay = el.y1 + py * r;
-const stroke = selected ? “#1d4ed8” : “#2c2416”;
+const stroke = selected ? "#1d4ed8" : "#2c2416";
 const t = wallThick || 6;
 
 return (
-<g onClick={onClick} style={{ cursor:“pointer” }}>
+<g onClick={onClick} style={{ cursor:"pointer" }}>
 {/* invisible hit area */}
 <line x1={el.x1} y1={el.y1} x2={el.x2} y2={el.y2} stroke="transparent" strokeWidth={20} />
 {/* door leaf line */}
@@ -71,10 +71,10 @@ return (
 stroke={stroke} strokeWidth={t} strokeLinecap="butt" />
 {/* thin face line */}
 <line x1={el.x1} y1={el.y1} x2={el.x2} y2={el.y2}
-stroke={selected ? “#60a5fa” : “#faf6ef”} strokeWidth={Math.max(1,t-3)} strokeLinecap=“butt” />
+stroke={selected ? "#60a5fa" : "#faf6ef"} strokeWidth={Math.max(1,t-3)} strokeLinecap="butt" />
 {/* quarter-circle arc */}
 <path d={`M ${el.x2} ${el.y2} A ${r} ${r} 0 0 0 ${ax} ${ay}`}
-fill=“none” stroke={stroke} strokeWidth={1.5} strokeDasharray=“5 3” />
+fill="none" stroke={stroke} strokeWidth={1.5} strokeDasharray="5 3" />
 {/* hinge dot */}
 <circle cx={el.x1} cy={el.y1} r={2.5} fill={stroke} />
 </g>
@@ -85,11 +85,11 @@ fill=“none” stroke={stroke} strokeWidth={1.5} strokeDasharray=“5 3” />
 function VentSymbol({ el, selected, onClick }) {
 const cx = (el.x1 + el.x2) / 2, cy = (el.y1 + el.y2) / 2;
 const r = Math.max(10, Math.hypot(el.x2 - el.x1, el.y2 - el.y1) / 2);
-const stroke = selected ? “#1d4ed8” : “#4a7a6a”;
+const stroke = selected ? "#1d4ed8" : "#4a7a6a";
 return (
-<g onClick={onClick} style={{ cursor:“pointer” }}>
-<circle cx={cx} cy={cy} r={r} fill=”#d4ede8” fillOpacity={0.7} stroke={stroke} strokeWidth={selected ? 2.5 : 1.5} />
-<circle cx={cx} cy={cy} r={r * 0.35} fill=“none” stroke={stroke} strokeWidth={1.2} />
+<g onClick={onClick} style={{ cursor:"pointer" }}>
+<circle cx={cx} cy={cy} r={r} fill="#d4ede8" fillOpacity={0.7} stroke={stroke} strokeWidth={selected ? 2.5 : 1.5} />
+<circle cx={cx} cy={cy} r={r * 0.35} fill="none" stroke={stroke} strokeWidth={1.2} />
 {[0,45,90,135].map(deg => {
 const rad = deg * Math.PI / 180;
 return <line key={deg}
@@ -108,7 +108,7 @@ const x = Math.min(el.x1, el.x2), y = Math.min(el.y1, el.y2);
 const w = Math.abs(el.x2 - el.x1), h = Math.abs(el.y2 - el.y1);
 if (w < 4 || h < 4) return null;
 const steps = el.steps || 8;
-const stroke = selected ? “#1d4ed8” : “#2c2416”;
+const stroke = selected ? "#1d4ed8" : "#2c2416";
 const isVertical = h >= w; // step lines run horizontally when stair is taller
 const lines = [];
 for (let i = 0; i <= steps; i++) {
@@ -128,10 +128,10 @@ const arrowX1 = isVertical ? x + w / 2 : x + w * 0.85;
 const arrowX2 = isVertical ? x + w / 2 : x + w * 0.15;
 
 return (
-<g onClick={onClick} style={{ cursor:“pointer” }}>
-<rect x={x} y={y} width={w} height={h} fill=”#f0ebe0” fillOpacity={0.6}
+<g onClick={onClick} style={{ cursor:"pointer" }}>
+<rect x={x} y={y} width={w} height={h} fill="#f0ebe0" fillOpacity={0.6}
 stroke={stroke} strokeWidth={selected ? 2.5 : 1.5}
-strokeDasharray={selected ? “none” : “none”} />
+strokeDasharray={selected ? "none" : "none"} />
 {lines}
 {/* Direction arrow */}
 {isVertical ? (
@@ -144,8 +144,8 @@ strokeDasharray={selected ? “none” : “none”} />
 <text
 x={isVertical ? x + w / 2 : x + w * 0.75}
 y={isVertical ? y + h * 0.92 : y + h / 2 + 4}
-textAnchor=“middle” fontSize={Math.min(9, Math.min(w, h) * 0.18)}
-fill={stroke} fontFamily=“Georgia,serif” fontStyle=“italic”>upp</text>
+textAnchor="middle" fontSize={Math.min(9, Math.min(w, h) * 0.18)}
+fill={stroke} fontFamily="Georgia,serif" fontStyle="italic">upp</text>
 )}
 </g>
 );
@@ -153,9 +153,9 @@ fill={stroke} fontFamily=“Georgia,serif” fontStyle=“italic”>upp</text>
 
 function TextEl({ el, selected, onClick, onDblClick }) {
 return (
-<g onClick={onClick} onDoubleClick={onDblClick} style={{ cursor:“pointer” }}>
-{selected && <rect x={el.x-4} y={el.y - el.size - 2} width={el.text.length * el.size * 0.65 + 8} height={el.size + 8} fill=“none” stroke=”#1d4ed8” strokeWidth={1} strokeDasharray=“4 2” rx={2} />}
-<text x={el.x} y={el.y} fontSize={el.size} fill={el.color || “#2c2416”} fontFamily=“Georgia,serif” fontWeight={el.bold ? “bold” : “normal”} fontStyle={el.italic ? “italic” : “normal”}>
+<g onClick={onClick} onDoubleClick={onDblClick} style={{ cursor:"pointer" }}>
+{selected && <rect x={el.x-4} y={el.y - el.size - 2} width={el.text.length * el.size * 0.65 + 8} height={el.size + 8} fill="none" stroke="#1d4ed8" strokeWidth={1} strokeDasharray="4 2" rx={2} />}
+<text x={el.x} y={el.y} fontSize={el.size} fill={el.color || "#2c2416"} fontFamily="Georgia,serif" fontWeight={el.bold ? "bold" : "normal"} fontStyle={el.italic ? "italic" : "normal"}>
 {el.text}
 </text>
 </g>
@@ -164,22 +164,22 @@ return (
 
 export default function App() {
 const svgRef = useRef(null);
-const [tool, setTool] = useState(“wall”);
+const [tool, setTool] = useState("wall");
 const [histState, dispatch] = useReducer(historyReducer, { past:[], present:[], future:[] });
 const elements = histState.present;
 const setElements = useCallback((fn) => {
-dispatch({ type:“SET”, elements: typeof fn === “function” ? fn(histState.present) : fn });
+dispatch({ type:"SET", elements: typeof fn === "function" ? fn(histState.present) : fn });
 }, [histState.present]);
 
 const [drawing, setDrawing]     = useState(null);
 const [selected, setSelected]   = useState(null);
 const [roomColor, setRoomColor] = useState(ROOM_COLORS[0]);
 const [roomLabel, setRoomLabel] = useState(ROOM_NAMES[0]);
-const [customLabel, setCustomLabel] = useState(””);
+const [customLabel, setCustomLabel] = useState("");
 const [wallThick, setWallThick] = useState(6);
 const [stairSteps, setStairSteps] = useState(8);
 const [textSize, setTextSize]   = useState(14);
-const [textColor, setTextColor] = useState(”#2c2416”);
+const [textColor, setTextColor] = useState("#2c2416");
 const [textBold, setTextBold]   = useState(false);
 const [textItalic, setTextItalic] = useState(false);
 const [showGrid, setShowGrid]   = useState(true);
@@ -193,8 +193,8 @@ const touchState = useRef({});
 useEffect(() => {
 const check = () => setIsMobile(window.innerWidth < 768);
 check();
-window.addEventListener(“resize”, check);
-return () => window.removeEventListener(“resize”, check);
+window.addEventListener("resize", check);
+return () => window.removeEventListener("resize", check);
 }, []);
 
 const getSVGPoint = useCallback((cx, cy) => {
@@ -211,50 +211,50 @@ return { x: (cx - rect.left - pan.x) / zoom, y: (cy - rect.top - pan.y) / zoom }
 useEffect(() => {
 const h = (e) => {
 const tag = document.activeElement.tagName;
-if (tag === “INPUT” || tag === “TEXTAREA”) return;
-if ((e.metaKey || e.ctrlKey) && e.key === “z” && !e.shiftKey) { dispatch({ type:“UNDO” }); setSelected(null); }
-if ((e.metaKey || e.ctrlKey) && (e.key === “y” || (e.key === “z” && e.shiftKey))) { dispatch({ type:“REDO” }); setSelected(null); }
-if ((e.key === “Delete” || e.key === “Backspace”) && selected !== null) deleteSelected();
+if (tag === "INPUT" || tag === "TEXTAREA") return;
+if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) { dispatch({ type:"UNDO" }); setSelected(null); }
+if ((e.metaKey || e.ctrlKey) && (e.key === "y" || (e.key === "z" && e.shiftKey))) { dispatch({ type:"REDO" }); setSelected(null); }
+if ((e.key === "Delete" || e.key === "Backspace") && selected !== null) deleteSelected();
 };
-window.addEventListener(“keydown”, h);
-return () => window.removeEventListener(“keydown”, h);
+window.addEventListener("keydown", h);
+return () => window.removeEventListener("keydown", h);
 }, [selected, histState]);
 
 // ── Mouse ─────────────────────────────────────────────────────────────────
 const onMouseDown = (e) => {
 if (e.button !== 0) return;
 if (e.altKey || e.metaKey) {
-touchState.current = { mode:“pan”, base:{ x: e.clientX - pan.x, y: e.clientY - pan.y } };
+touchState.current = { mode:"pan", base:{ x: e.clientX - pan.x, y: e.clientY - pan.y } };
 return;
 }
 startDraw(e.clientX, e.clientY);
 };
 const onMouseMove = (e) => {
-if (touchState.current.mode === “pan”) {
+if (touchState.current.mode === "pan") {
 setPan({ x: e.clientX - touchState.current.base.x, y: e.clientY - touchState.current.base.y });
 return;
 }
 updateDraw(e.clientX, e.clientY);
 };
-const onMouseUp   = () => { if (touchState.current.mode === “pan”) { touchState.current = {}; return; } commitDraw(); };
+const onMouseUp   = () => { if (touchState.current.mode === "pan") { touchState.current = {}; return; } commitDraw(); };
 const onWheel     = (e) => { e.preventDefault(); setZoom(z => Math.min(5, Math.max(0.15, z * (1 - e.deltaY * 0.001)))); };
 
 // ── Touch ─────────────────────────────────────────────────────────────────
 const onTouchStart = (e) => {
 e.preventDefault();
 if (e.touches.length === 2) {
-touchState.current = { mode:“pinch”,
+touchState.current = { mode:"pinch",
 pinchDist: Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY),
 midBase:{ x:(e.touches[0].clientX+e.touches[1].clientX)/2 - pan.x, y:(e.touches[0].clientY+e.touches[1].clientY)/2 - pan.y },
 zoomBase: zoom };
 setDrawing(null); return;
 }
-touchState.current = { mode:“draw” };
+touchState.current = { mode:"draw" };
 startDraw(e.touches[0].clientX, e.touches[0].clientY);
 };
 const onTouchMove = (e) => {
 e.preventDefault();
-if (e.touches.length === 2 && touchState.current.mode === “pinch”) {
+if (e.touches.length === 2 && touchState.current.mode === "pinch") {
 const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
 const midX = (e.touches[0].clientX+e.touches[1].clientX)/2, midY = (e.touches[0].clientY+e.touches[1].clientY)/2;
 setZoom(Math.min(5, Math.max(0.15, touchState.current.zoomBase * (dist / touchState.current.pinchDist))));
@@ -263,18 +263,18 @@ return;
 }
 if (e.touches.length === 1) updateDraw(e.touches[0].clientX, e.touches[0].clientY);
 };
-const onTouchEnd = (e) => { e.preventDefault(); if (touchState.current.mode === “pinch”) { touchState.current={}; return; } commitDraw(); };
+const onTouchEnd = (e) => { e.preventDefault(); if (touchState.current.mode === "pinch") { touchState.current={}; return; } commitDraw(); };
 
 // ── Draw ──────────────────────────────────────────────────────────────────
 const effectiveLabel = customLabel.trim() || roomLabel;
 
 const startDraw = (cx, cy) => {
-if (tool === “select” || tool === “erase”) return;
-if (tool === “text”) {
+if (tool === "select" || tool === "erase") return;
+if (tool === "text") {
 const pt = getSVGPointFree(cx, cy);
-const newEl = { id:newId(), type:“text”, x:pt.x, y:pt.y, text:“Text”, size:textSize, color:textColor, bold:textBold, italic:textItalic };
-setElements(p => […p, newEl]);
-setEditingText({ id:newEl.id, value:“Text” });
+const newEl = { id:newId(), type:"text", x:pt.x, y:pt.y, text:"Text", size:textSize, color:textColor, bold:textBold, italic:textItalic };
+setElements(p => [...p, newEl]);
+setEditingText({ id:newEl.id, value:"Text" });
 return;
 }
 const pt = getSVGPoint(cx, cy);
@@ -284,13 +284,13 @@ color:roomColor, label:effectiveLabel, thick:wallThick, steps:stairSteps });
 const updateDraw = (cx, cy) => {
 if (!drawing) return;
 const pt = getSVGPoint(cx, cy);
-setDrawing(d => d ? { …d, x2:pt.x, y2:pt.y } : null);
+setDrawing(d => d ? { ...d, x2:pt.x, y2:pt.y } : null);
 };
 const commitDraw = () => {
 if (!drawing) return;
 const { x1,y1,x2,y2 } = drawing;
 if (Math.abs(x2-x1) > 4 || Math.abs(y2-y1) > 4) {
-setElements(p => […p, { …drawing, id:newId() }]);
+setElements(p => [...p, { ...drawing, id:newId() }]);
 }
 setDrawing(null);
 };
@@ -301,12 +301,12 @@ if (selected !== null) { setElements(p => p.filter(e => e.id !== selected)); set
 
 // ── Render element ────────────────────────────────────────────────────────
 const renderEl = (el, preview=false) => {
-const key = el.id ?? “preview”;
+const key = el.id ?? "preview";
 const sel = el.id === selected;
 const click = (e) => {
 e.stopPropagation();
-if (tool===“erase”) setElements(p => p.filter(x => x.id !== el.id));
-else if (tool===“select”) setSelected(el.id);
+if (tool==="erase") setElements(p => p.filter(x => x.id !== el.id));
+else if (tool==="select") setSelected(el.id);
 };
 
 ```
@@ -368,7 +368,7 @@ return null;
 // ── Text editing overlay ──────────────────────────────────────────────────
 const commitText = () => {
 if (!editingText) return;
-setElements(p => p.map(e => e.id===editingText.id ? { …e, text:editingText.value||“Text” } : e));
+setElements(p => p.map(e => e.id===editingText.id ? { ...e, text:editingText.value||"Text" } : e));
 setEditingText(null);
 };
 
@@ -381,21 +381,21 @@ if (!rect) return null;
 return { left: rect.left + el.x * zoom + pan.x, top: rect.top + el.y * zoom + pan.y - el.size * zoom };
 };
 
-const rooms  = elements.filter(e => e.type===“room”);
-const others = elements.filter(e => e.type!==“room”);
+const rooms  = elements.filter(e => e.type==="room");
+const others = elements.filter(e => e.type!=="room");
 const canUndo = histState.past.length > 0;
 const canRedo = histState.future.length > 0;
 
 // ── Sidebar section ───────────────────────────────────────────────────────
 const SideSection = ({ title, children }) => (
-<div style={{ borderTop:“1px solid #c4b49a”, paddingTop:8, marginTop:4 }}>
-<div style={{ fontSize:9, letterSpacing:2, color:”#9a8872”, fontWeight:“bold”, marginBottom:6 }}>{title}</div>
+<div style={{ borderTop:"1px solid #c4b49a", paddingTop:8, marginTop:4 }}>
+<div style={{ fontSize:9, letterSpacing:2, color:"#9a8872", fontWeight:"bold", marginBottom:6 }}>{title}</div>
 {children}
 </div>
 );
 
 return (
-<div style={{ display:“flex”, flexDirection:“column”, height:“100vh”, background:”#f5f0e8”, fontFamily:“Georgia,serif”, overflow:“hidden” }}>
+<div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"#f5f0e8", fontFamily:"Georgia,serif", overflow:"hidden" }}>
 
 ```
   {/* ── Top bar ── */}
@@ -691,14 +691,13 @@ return (
     </div>
   )}
 </div>
-```
 
 );
 }
 
 const hdrBtn = (bg) => ({
-background:bg, color:”#e8d5b7”, border:“none”, padding:“5px 10px”,
-fontSize:11, borderRadius:4, cursor:“pointer”, fontFamily:“Georgia,serif”
+background:bg, color:"#e8d5b7", border:"none", padding:"5px 10px",
+fontSize:11, borderRadius:4, cursor:"pointer", fontFamily:"Georgia,serif"
 });
-const selectSty = { padding:“4px 6px”, fontSize:11, border:“1px solid #b4a48c”, borderRadius:3, background:”#f5f0e8”, fontFamily:“Georgia,serif” };
-const inputSty  = { padding:“4px 6px”, fontSize:11, border:“1px solid #b4a48c”, borderRadius:3, background:”#f5f0e8”, fontFamily:“Georgia,serif” };
+const selectSty = { padding:"4px 6px", fontSize:11, border:"1px solid #b4a48c", borderRadius:3, background:"#f5f0e8", fontFamily:"Georgia,serif" };
+const inputSty  = { padding:"4px 6px", fontSize:11, border:"1px solid #b4a48c", borderRadius:3, background:"#f5f0e8", fontFamily:"Georgia,serif" };
